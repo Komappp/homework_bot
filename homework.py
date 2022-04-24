@@ -22,8 +22,8 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_TIME = 5
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuse/'
+RETRY_TIME = 600
+ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 ERRORS = []
 
@@ -34,6 +34,12 @@ HOMEWORK_STATUSES = {
 }
 
 
+def generate_exception(message):
+    """Делает запись в лог и генерит исключение"""
+    logger.error(message)
+    raise Exception(message)
+
+
 def send_message(bot, message):
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
@@ -42,38 +48,30 @@ def send_message(bot, message):
         logger.error('Не удалось отправить сообщение')
 
 
-def send_error_message(bot, message):
-    if message not in ERRORS:
-        send_message(bot, message)
-        ERRORS.append(message)
-
-
 def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     homework_statuses = requests.get(ENDPOINT, headers=HEADERS, params=params)
     if not homework_statuses.status_code == 200:
         message = 'Ответ от API не получен'
-        logger.error(message)
-        raise Exception
+        generate_exception(message)
     return homework_statuses.json()
 
 
 def check_response(response):
     if not isinstance(response['homeworks'], list):
-        logger.error('homeworks не список')
-        raise Exception
+        message = 'homeworks не список'
+        generate_exception(message)
     homeworks = response['homeworks']
     return homeworks
 
 
 def parse_status(homework):
     homework_name = homework['homework_name']
-    try:
-        homework_status = homework['status']
-    except Exception:
-        logger.error('Нужные ключи в ответе API отсутствуют')
-        raise Exception
+    if 'status' not in homework:
+        message = 'Нужные ключи в ответе API отсутствуют'
+        generate_exception(message)
+    homework_status = homework['status']
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
@@ -100,10 +98,10 @@ def main():
     while True:
         try:
             response = get_api_answer(int(current_timestamp))
-            print(response)
             homeworks = check_response(response)
             if len(homeworks) < 1:
-                raise Exception
+                message = 'Пустой словарь'
+                generate_exception(message)
             homework = homeworks[0]
             message = parse_status(homework)
             if message and (message != status_message):
@@ -113,8 +111,8 @@ def main():
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-            if not message in ERRORS:
-                send_error_message(bot, message)
+            if message not in ERRORS:
+                send_message(bot, message)
                 ERRORS.append(message)
             time.sleep(RETRY_TIME)
         else:
