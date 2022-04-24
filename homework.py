@@ -36,6 +36,7 @@ HOMEWORK_STATUSES = {
 
 def generate_exception(message):
     """Делает запись в лог и генерит исключение"""
+
     logger.error(message)
     raise Exception(message)
 
@@ -78,6 +79,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка доступности переменных окружения"""
+
     if PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
         return True
     else:
@@ -86,6 +88,7 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
+    
     if not check_tokens():
         logger.critical(
             'Отсутствуют необходимые для работы переменные окружения'
