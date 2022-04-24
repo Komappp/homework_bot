@@ -35,13 +35,13 @@ HOMEWORK_STATUSES = {
 
 
 def generate_exception(message):
-    """Делает запись в лог и генерит исключение"""
+    """Делает запись в лог и генерит исключение."""
     logger.error(message)
     raise Exception(message)
 
 
 def send_message(bot, message):
-    """отправляет сообщения в телеграм"""
+    """отправляет сообщения в телеграм."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Отправлено сообщение в телеграм')
@@ -50,7 +50,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
-    """Делает запрос к API и возвращает данные преобразованные из JSON"""
+    """Делает запрос к API и возвращает данные преобразованные из JSON."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     homework_statuses = requests.get(ENDPOINT, headers=HEADERS, params=params)
@@ -61,7 +61,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    """Проверяет ответ от API и извлекает список с домашками"""
+    """Проверяет ответ от API и извлекает список с домашками."""
     if not isinstance(response['homeworks'], list):
         message = 'homeworks не список'
         generate_exception(message)
@@ -70,7 +70,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлекает имя и статус домашки"""
+    """Извлекает имя и статус домашки."""
     homework_name = homework['homework_name']
     if 'status' not in homework:
         message = 'Нужные ключи в ответе API отсутствуют'
@@ -81,7 +81,7 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """Проверка доступности переменных окружения"""
+    """Проверка доступности переменных окружения."""
     if PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID:
         return True
     else:
