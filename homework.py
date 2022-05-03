@@ -58,12 +58,12 @@ def get_api_answer(current_timestamp):
 def check_response(response):
     """Проверяет ответ от API и извлекает список с домашками."""
     logger.info('Началась проверка ответа от сервера API')
-    # if not isinstance(response, dict): !С ЭТИМИ ПРОВЕРКАМИ НЕ ПРОХОДИТ ТЕСТ!
-    #    raise Exception('response не словарь')
-    # if 'current_date' not in response:
-    #    raise Exception('в response отсутствует current_date')
+    if not isinstance(response, dict):
+        raise TypeError('Ответ не является словарём')
+    if 'current_date' not in response or 'homeworks' not in response:
+        raise KeyError('Отсутствует ключ "current_date" или "homeworks"')
     if not isinstance(response['homeworks'], list):
-        raise Exception('homeworks не список')
+        raise TypeError('Ключ "homeworks" не список')
     homeworks = response['homeworks']
     return homeworks
 
@@ -71,8 +71,8 @@ def check_response(response):
 def parse_status(homework):
     """Извлекает имя и статус домашки."""
     #  !С ЭТОЙ ПРОВЕРКОЙ НЕ ПРОХОДИТ ТЕСТ!
-    # if 'status' not in homework or 'homework_name' not in homework:
-    #   raise Exception('Нужные ключи в ответе API отсутствуют')
+    if 'status' not in homework or 'homework_name' not in homework:
+        raise KeyError('Нужные ключи в ответе API отсутствуют')
     homework_name = homework['homework_name']
     homework_status = homework['status']
     if homework_status not in HOMEWORK_VERDICTS:
